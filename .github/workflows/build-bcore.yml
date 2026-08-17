@@ -1,0 +1,39 @@
+name: Build Bcore AAR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-bcore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;29.0.13846066"
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Build Bcore Release AAR
+        run: ./gradlew :Bcore:assembleRelease --stacktrace
+
+      - name: Upload Bcore AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bcore-release
+          path: Bcore/build/outputs/aar/*release.aar
